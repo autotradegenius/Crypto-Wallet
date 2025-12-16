@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet Transaction Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-name {
+            font-size: 16px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .wallet-address {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 14px;
+            color: #555;
+            border-left: 4px solid #667eea;
+            margin-bottom: 20px;
+        }
+
+        .balance-section {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 25px;
+            border-radius: 12px;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .balance-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .balance-amount {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-send {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-send:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+        }
+
+        .btn-receive {
+            background: #51cf66;
+            color: white;
+        }
+
+        .btn-receive:hover {
+            background: #40c057;
+            transform: translateY(-2px);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: monospace;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn-modal {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-confirm {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-cancel {
+            background: #ddd;
+            color: #555;
+        }
+
+        .success-message {
+            background: #51cf66;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .error-message {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .transactions {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .transaction {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .transaction:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .tx-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tx-type {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .tx-type.sent {
+            background: #fee;
+            color: #c33;
+        }
+
+        .tx-type.received {
+            background: #efe;
+            color: #3c3;
+        }
+
+        .tx-amount {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .tx-details {
+            display: grid;
+            gap: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .tx-detail {
+            display: flex;
+            gap: 10px;
+        }
+
+        .tx-label {
+            font-weight: 600;
+            min-width: 80px;
+        }
+
+        .tx-value {
+            word-break: break-all;
+            font-family: monospace;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 22px;
+            }
+
+            .balance-amount {
+                font-size: 28px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-top">
+                <h1>🔐 Wallet Transaction Manager</h1>
+                <div class="user-info">
+                    <span class="user-name" id="userName">Welcome!</span>
+                    <button class="logout-btn" onclick="handleLogout()">Logout</button>
+                </div>
+            </div>
+            <div class="wallet-address">
+                <strong>Wallet Address:</strong><br>
+                TDM4gaGrYRhh39ugao8mt8eRjkxoTfTAZ6
+            </div>
+            
+            <div class="balance-section">
+                <div class="balance-label">Total Balance</div>
+                <div class="balance-amount" id="balance">9,980 USDT</div>
+                <div class="action-buttons">
+                    <button class="btn btn-send" onclick="openSendModal()">📤 Send</button>
+                    <button class="btn btn-receive" onclick="openReceiveModal()">📥 Receive</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <div class="stat-label">Total Transactions</div>
+                <div class="stat-value" id="totalTx">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Sent</div>
+                <div class="stat-value" id="totalSent">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Received</div>
+                <div class="stat-value" id="totalReceived">-</div>
+            </div>
+        </div>
+
+        <div class="transactions">
+            <h2>📋 Recent Transactions</h2>
+            <div id="transactionList"></div>
+        </div>
+    </div>
+
+    <!-- Send Modal -->
+    <div class="modal" id="sendModal">
+        <div class="modal-content">
+            <div class="modal-header">Send USDT</div>
+            <div id="sendStep1">
+                <div class="form-group">
+                    <label class="form-label">Recipient Address</label>
+                    <input type="text" class="form-input" id="recipientAddress" placeholder="Enter wallet address">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Amount (USDT)</label>
+                    <input type="number" class="form-input" id="sendAmount" placeholder="Enter amount">
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn-modal btn-cancel" onclick="closeModal()">Cancel</button>
+                    <button class="btn-modal btn-confirm" onclick="showPasswordStep()">Next</button>
+                </div>
+            </div>
+            <div id="sendStep2" style="display: none;">
+                <div id="errorMsg"></div>
+                <div class="form-group">
+                    <label class="form-label">Enter Password</label>
+                    <input type="password" class="form-input" id="password" placeholder="Enter your password">
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn-modal btn-cancel" onclick="backToStep1()">Back</button>
+                    <button class="btn-modal btn-confirm" onclick="confirmSend()">Confirm</button>
+                </div>
+            </div>
+            <div id="sendProcessing" style="display: none;">
+                <div style="text-align: center; padding: 40px 20px;">
+                    <div style="width: 60px; height: 60px; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                    <div style="font-size: 18px; font-weight: bold; color: #333; margin-bottom: 10px;">Processing Transaction...</div>
+                    <div style="font-size: 14px; color: #666;">Please wait <span id="countdown">15</span> seconds</div>
+                </div>
+            </div>
+            <div id="sendSuccess" style="display: none;">
+                <div class="success-message">
+                    ✓ Transaction Successful!
+                </div>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Amount</div>
+                        <div style="color: #333; font-weight: bold; font-size: 20px;" id="successAmount"></div>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <div style="color: #666; font-size: 12px; margin-bottom: 5px;">To</div>
+                        <div style="color: #333; font-size: 13px; word-break: break-all; font-family: monospace;" id="successRecipient"></div>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Transaction ID</div>
+                        <div style="color: #333; font-size: 13px; word-break: break-all; font-family: monospace;" id="successTxId"></div>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Date & Time</div>
+                        <div style="color: #333; font-size: 14px;" id="successDateTime"></div>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Block Number</div>
+                        <div style="color: #333; font-size: 14px;" id="successBlock"></div>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Network</div>
+                        <div style="color: #333; font-size: 14px;">TRON (TRC20)</div>
+                    </div>
+                    <div>
+                        <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Transaction Fee</div>
+                        <div style="color: #333; font-size: 14px;">0.000001 TRX</div>
+                    </div>
+                </div>
+                <div class="modal-buttons" style="margin-top: 20px;">
+                    <button class="btn-modal btn-confirm" onclick="closeModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receive Modal -->
+    <div class="modal" id="receiveModal">
+        <div class="modal-content">
+            <div class="modal-header">Receive USDT</div>
+            <div class="form-group">
+                <label class="form-label">Your Wallet Address</label>
+                <div class="wallet-address">
+                    TDM4gaGrYRhh39ugao8mt8eRjkxoTfTAZ6
+                </div>
+                <p style="color: #666; margin-top: 15px; font-size: 14px;">
+                    Share this address to receive USDT on the TRON (TRC20) network.
+                </p>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-modal btn-confirm" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const walletAddress = 'TDM4gaGrYRhh39ugao8mt8eRjkxoTfTAZ6';
+        const correctPassword = '1224';
+        let currentBalance = 9980;
+        
+        let transactions = [
+            {
+                hash: '0x9f3a...b27c',
+                type: 'received',
+                amount: 3315,
+                from: 'TXhtjXq8zNxMyrW8hQdR9WcAj3X1P2L3q2',
+                to: walletAddress,
+                timestamp: '15 Dec 2025 – 09:24 AM',
+                status: 'Confirmed',
+                block: '#62104532',
+                fee: '0.000001 TRX',
+                network: 'TRON (TRC20)'
+            },
+            {
+                hash: '0x7e2b...c15f',
+                type: 'received',
+                amount: 1250,
+                from: 'TPQRstuv1234567890abcdefghijklmnop',
+                to: walletAddress,
+                timestamp: '16 Dec 2025 – 02:15 PM',
+                status: 'Confirmed',
+                block: '#62108921',
+                fee: '0.000001 TRX',
+                network: 'TRON (TRC20)'
+            },
+            {
+                hash: '0x5d8c...a94e',
+                type: 'sent',
+                amount: 500,
+                from: walletAddress,
+                to: 'TYZabcd9876543210fedcbazyxwvutsrq',
+                timestamp: '16 Dec 2025 – 10:30 AM',
+                status: 'Confirmed',
+                block: '#62106754',
+                fee: '0.000001 TRX',
+                network: 'TRON (TRC20)'
+            },
+            {
+                hash: '0x3a1f...d72b',
+                type: 'received',
+                amount: 2100,
+                from: 'TLMNopqr5555666677778888999900001111',
+                to: walletAddress,
+                timestamp: '14 Dec 2025 – 04:45 PM',
+                status: 'Confirmed',
+                block: '#62095432',
+                fee: '0.000001 TRX',
+                network: 'TRON (TRC20)'
+            },
+            {
+                hash: '0x8b6e...f43a',
+                type: 'sent',
+                amount: 750,
+                from: walletAddress,
+                to: 'TGHIjklm2222333344445555666677778888',
+                timestamp: '13 Dec 2025 – 11:20 AM',
+                status: 'Confirmed',
+                block: '#62089876',
+                fee: '0.000001 TRX',
+                network: 'TRON (TRC20)'
+            },
+            {
+                hash: '0x2c9d...e81f',
+                type: 'received',
+                amount: 3315,
+                from: 'TXhtjXq8zNxMyrW8hQdR9WcAj3X1P2L3q2',
+                to: walletAddress,
+                timestamp: '15 Dec 2025 – 09:24 AM',
+                status: 'Confirmed',
+                block: '#62104532',
+                fee: '0.000001 TRX',
+                network: 'TRON (TRC20)'
+            }
+        ];
+
+        // NEW: Check authentication and load user info
+        function checkAuth() {
+            const currentUser = sessionStorage.getItem('currentUser');
+            if (!currentUser) {
+                // Not logged in, redirect to login page
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Load user data
+            const usersData = sessionStorage.getItem('walletUsers');
+            if (usersData) {
+                const users = JSON.parse(usersData);
+                if (users[currentUser]) {
+                    document.getElementById('userName').textContent = `Welcome, ${users[currentUser].name}!`;
+                }
+            }
+        }
+
+        // NEW: Handle logout
+        function handleLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                sessionStorage.removeItem('currentUser');
+                window.location.href = 'index.html';
+            }
+        }
+
+        function displayTransactions() {
+            const transactionList = document.getElementById('transactionList');
+            
+            let totalSent = 0;
+            let totalReceived = 0;
+
+            const html = transactions.map(tx => {
+                if (tx.type === 'sent') totalSent += tx.amount;
+                if (tx.type === 'received') totalReceived += tx.amount;
+
+                return `
+                    <div class="transaction">
+                        <div class="tx-header">
+                            <span class="tx-type ${tx.type}">${tx.type.toUpperCase()}</span>
+                            <span class="tx-amount">${tx.amount.toLocaleString()} USDT</span>
+                        </div>
+                        <div class="tx-details">
+                            <div class="tx-detail">
+                                <span class="tx-label">Network:</span>
+                                <span class="tx-value">${tx.network}</span>
+                            </div>
+                            <div class="tx-detail">
+                                <span class="tx-label">TxID:</span>
+                                <span class="tx-value">${tx.hash}</span>
+                            </div>
+                            <div class="tx-detail">
+                                <span class="tx-label">From:</span>
+                                <span class="tx-value">${tx.from}</span>
+                            </div>
+                            <div class="tx-detail">
+                                <span class="tx-label">To:</span>
+                                <span class="tx-value">${tx.to}</span>
+                            </div>
+                            <div class="tx-detail">
+                                <span class="tx-label">Time:</span>
+                                <span class="tx-value">${tx.timestamp}</span>
+                            </div>
+                            <div class="tx-detail">
+                                <span class="tx-label">Block:</span>
+                                <span class="tx-value">${tx.block}</span>
+                            </div>
+                            <div class="tx-detail">
+                                <span class="tx-label">Fee:</span>
+                                <span class="tx-value">${tx.fee}</span>
+                            </div>
+                            <div class="tx-detail">
+                                <span class="tx-label">Status:</span>
+                                <span class="tx-value">✓ ${tx.status}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            transactionList.innerHTML = html;
+
+            document.getElementById('totalTx').textContent = transactions.length;
+            document.getElementById('totalSent').textContent = totalSent.toLocaleString() + ' USDT';
+            document.getElementById('totalReceived').textContent = totalReceived.toLocaleString() + ' USDT';
+        }
+
+        function updateBalance() {
+            document.getElementById('balance').textContent = currentBalance.toLocaleString() + ' USDT';
+        }
+
+        function openSendModal() {
+            document.getElementById('sendModal').classList.add('active');
+            document.getElementById('sendStep1').style.display = 'block';
+            document.getElementById('sendStep2').style.display = 'none';
+            document.getElementById('sendProcessing').style.display = 'none';
+            document.getElementById('sendSuccess').style.display = 'none';
+            document.getElementById('recipientAddress').value = '';
+            document.getElementById('sendAmount').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('errorMsg').innerHTML = '';
+        }
+
+        function openReceiveModal() {
+            document.getElementById('receiveModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('sendModal').classList.remove('active');
+            document.getElementById('receiveModal').classList.remove('active');
+        }
+
+        function showPasswordStep() {
+            const recipient = document.getElementById('recipientAddress').value;
+            const amount = parseFloat(document.getElementById('sendAmount').value);
+
+            if (!recipient) {
+                alert('Please enter recipient address');
+                return;
+            }
+
+            if (!amount || amount <= 0) {
+                alert('Please enter valid amount');
+                return;
+            }
+
+            if (amount > currentBalance) {
+                alert('Insufficient balance');
+                return;
+            }
+
+            document.getElementById('sendStep1').style.display = 'none';
+            document.getElementById('sendStep2').style.display = 'block';
+        }
+
+        function backToStep1() {
+            document.getElementById('sendStep1').style.display = 'block';
+            document.getElementById('sendStep2').style.display = 'none';
+            document.getElementById('errorMsg').innerHTML = '';
+        }
+
+        function confirmSend() {
+            const password = document.getElementById('password').value;
+            const recipient = document.getElementById('recipientAddress').value;
+            const amount = parseFloat(document.getElementById('sendAmount').value);
+
+            if (password !== correctPassword) {
+                document.getElementById('errorMsg').innerHTML = '<div class="error-message">Incorrect password. Please try again.</div>';
+                return;
+            }
+
+            document.getElementById('sendStep2').style.display = 'none';
+            document.getElementById('sendProcessing').style.display = 'block';
+            
+            let timeLeft = 15;
+            const countdownElement = document.getElementById('countdown');
+            
+            const countdownInterval = setInterval(() => {
+                timeLeft--;
+                countdownElement.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+
+            setTimeout(() => {
+                currentBalance -= amount;
+                
+                const now = new Date();
+                const timestamp = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + 
+                                ' – ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                
+                const fullTxId = '0x' + Array.from({length: 64}, () => 
+                    Math.floor(Math.random() * 16).toString(16)).join('');
+                
+                const blockNumber = '#' + (62110000 + Math.floor(Math.random() * 1000));
+                
+                const newTx = {
+                    hash: fullTxId.substring(0, 6) + '...' + fullTxId.substring(fullTxId.length - 4),
+                    type: 'sent',
+                    amount: amount,
+                    from: walletAddress,
+                    to: recipient,
+                    timestamp: timestamp,
+                    status: 'Confirmed',
+                    block: blockNumber,
+                    fee: '0.000001 TRX',
+                    network: 'TRON (TRC20)'
+                };
+
+                transactions.unshift(newTx);
+                
+                updateBalance();
+                displayTransactions();
+
+                document.getElementById('successAmount').textContent = amount.toLocaleString() + ' USDT';
+                document.getElementById('successRecipient').textContent = recipient;
+                document.getElementById('successTxId').textContent = fullTxId;
+                document.getElementById('successDateTime').textContent = timestamp;
+                document.getElementById('successBlock').textContent = blockNumber;
+
+                document.getElementById('sendProcessing').style.display = 'none';
+                document.getElementById('sendSuccess').style.display = 'block';
+            }, 15000);
+        }
+
+        // NEW: Initialize - check auth first
+        checkAuth();
+        displayTransactions();
+    </script>
+</body>
+</html>
