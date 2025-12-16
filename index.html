@@ -167,6 +167,12 @@
             margin-bottom: 5px;
         }
 
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
         @media (max-width: 480px) {
             .auth-container {
                 padding: 30px 20px;
@@ -185,8 +191,12 @@
             <p>Secure USDT Transaction Platform</p>
         </div>
 
+        <div id="loadingState" class="loading">
+            Loading...
+        </div>
+
         <!-- Login Form -->
-        <div id="loginForm" class="form-section active">
+        <div id="loginForm" class="form-section">
             <div id="loginMessage"></div>
             <div class="form-group">
                 <label class="form-label">Email Address</label>
@@ -255,20 +265,44 @@
     </div>
 
     <script>
-        // CHANGE 1: Use in-memory storage instead of localStorage
         let users = {};
-        
-        function loadUsers() {
-            // Try to load from sessionStorage (works in artifacts)
-            const stored = sessionStorage.getItem('walletUsers');
-            if (stored) {
-                users = JSON.parse(stored);
+        let isLoading = true;
+
+        // Persistent Storage Functions
+        async function loadUsers() {
+            try {
+                const result = await window.storage.get('wallet_users');
+                if (result && result.value) {
+                    users = JSON.parse(result.value);
+                }
+            } catch (error) {
+                console.log('No existing users data');
             }
         }
 
-        function saveUsers() {
-            // Save to sessionStorage instead of localStorage
-            sessionStorage.setItem('walletUsers', JSON.stringify(users));
+        async function saveUsers() {
+            try {
+                await window.storage.set('wallet_users', JSON.stringify(users));
+            } catch (error) {
+                console.error('Error saving users:', error);
+            }
+        }
+
+        async function setCurrentUser(email) {
+            try {
+                await window.storage.set('current_user', email);
+            } catch (error) {
+                console.error('Error setting current user:', error);
+            }
+        }
+
+        async function getCurrentUser() {
+            try {
+                const result = await window.storage.get('current_user');
+                return result ? result.value : null;
+            } catch (error) {
+                return null;
+            }
         }
 
         function showLogin() {
@@ -304,7 +338,7 @@
             return password.length >= 8 && /[a-zA-Z]/.test(password) && /[0-9]/.test(password);
         }
 
-        function handleRegister() {
+        async function handleRegister() {
             const name = document.getElementById('registerName').value.trim();
             const email = document.getElementById('registerEmail').value.trim().toLowerCase();
             const password = document.getElementById('registerPassword').value;
@@ -339,10 +373,85 @@
                 name: name,
                 email: email,
                 password: password,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                balance: 9980,
+                transactions: [
+                    {
+                        hash: '0x9f3a...b27c',
+                        type: 'received',
+                        amount: 3315,
+                        from: 'TXhtjXq8zNxMyrW8hQdR9WcAj3X1P2L3q2',
+                        to: 'TDM4gaGrYRhh39ugao8mt8eRjkxoTfTAZ6',
+                        timestamp: '15 Dec 2025 — 09:24 AM',
+                        status: 'Confirmed',
+                        block: '#62104532',
+                        fee: '0.000001 TRX',
+                        network: 'TRON (TRC20)'
+                    },
+                    {
+                        hash: '0x7e2b...c15f',
+                        type: 'received',
+                        amount: 1250,
+                        from: 'TPQRstuv1234567890abcdefghijklmnop',
+                        to: 'TDM4gaGrYRhh39ugao8mt8eRjkxoTfTAZ6',
+                        timestamp: '16 Dec 2025 — 02:15 PM',
+                        status: 'Confirmed',
+                        block: '#62108921',
+                        fee: '0.000001 TRX',
+                        network: 'TRON (TRC20)'
+                    },
+                    {
+                        hash: '0x5d8c...a94e',
+                        type: 'sent',
+                        amount: 500,
+                        from: 'TDM4gaGrYRhh39ugao8mt8eRjkxoTfTAZ6',
+                        to: 'TYZabcd9876543210fedcbazyxwvutsrq',
+                        timestamp: '16 Dec 2025 — 10:30 AM',
+                        status: 'Confirmed',
+                        block: '#62106754',
+                        fee: '0.000001 TRX',
+                        network: 'TRON (TRC20)'
+                    },
+                    {
+                        hash: '0x3a1f...d72b',
+                        type: 'received',
+                        amount: 2100,
+                        from: 'TLMNopqr5555666677778888999900001111',
+                        to: 'TDM4gaGrYRhh39ugao8mt8eRjkxoTfTAZ6',
+                        timestamp: '14 Dec 2025 — 04:45 PM',
+                        status: 'Confirmed',
+                        block: '#62095432',
+                        fee: '0.000001 TRX',
+                        network: 'TRON (TRC20)'
+                    },
+                    {
+                        hash: '0x8b6e...f43a',
+                        type: 'sent',
+                        amount: 750,
+                        from: 'TDM4gaGrYRhh39ugao8mt8eRjkxoTfTAZ6',
+                        to: 'TGHIjklm2222333344445555666677778888',
+                        timestamp: '13 Dec 2025 — 11:20 AM',
+                        status: 'Confirmed',
+                        block: '#62089876',
+                        fee: '0.000001 TRX',
+                        network: 'TRON (TRC20)'
+                    },
+                    {
+                        hash: '0x2c9d...e81f',
+                        type: 'received',
+                        amount: 3315,
+                        from: 'TXhtjXq8zNxMyrW8hQdR9WcAj3X1P2L3q2',
+                        to: 'TDM4gaGrYRhh39ugao8mt8eRjkxoTfTAZ6',
+                        timestamp: '15 Dec 2025 — 09:24 AM',
+                        status: 'Confirmed',
+                        block: '#62104532',
+                        fee: '0.000001 TRX',
+                        network: 'TRON (TRC20)'
+                    }
+                ]
             };
 
-            saveUsers();
+            await saveUsers();
             showMessage('registerMessage', 'Account created successfully! Redirecting to login...', 'success');
             
             document.getElementById('registerName').value = '';
@@ -356,7 +465,7 @@
             }, 2000);
         }
 
-        function handleLogin() {
+        async function handleLogin() {
             const email = document.getElementById('loginEmail').value.trim().toLowerCase();
             const password = document.getElementById('loginPassword').value;
 
@@ -375,17 +484,15 @@
                 return;
             }
 
-            // CHANGE 2: Save to sessionStorage instead of localStorage
-            sessionStorage.setItem('currentUser', email);
+            await setCurrentUser(email);
             showMessage('loginMessage', 'Login successful! Redirecting...', 'success');
             
             setTimeout(() => {
-                // This will work when both files are in same directory
-                window.location.href = 'wallet.html';
+                location.reload();
             }, 1000);
         }
 
-        function handleForgotPassword() {
+        async function handleForgotPassword() {
             const email = document.getElementById('forgotEmail').value.trim().toLowerCase();
 
             if (!validateEmail(email)) {
@@ -407,12 +514,27 @@
             document.getElementById(elementId).innerHTML = `<div class="${className}">${message}</div>`;
         }
 
-        loadUsers();
-
-        // CHANGE 3: Check sessionStorage instead of localStorage
-        if (sessionStorage.getItem('currentUser')) {
-            window.location.href = 'wallet.html';
+        async function initialize() {
+            await loadUsers();
+            const currentUser = await getCurrentUser();
+            
+            document.getElementById('loadingState').style.display = 'none';
+            
+            if (currentUser && users[currentUser]) {
+                showWallet();
+            } else {
+                showLogin();
+            }
         }
+
+        function showWallet() {
+            window.location.href = '#wallet';
+            document.querySelectorAll('.form-section').forEach(el => el.style.display = 'none');
+            document.querySelector('.auth-container').innerHTML = '<div style="text-align: center; padding: 40px;"><h2>Loading Wallet...</h2></div>';
+            setTimeout(() => location.reload(), 500);
+        }
+
+        initialize();
     </script>
 </body>
 </html>
