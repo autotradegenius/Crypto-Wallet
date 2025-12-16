@@ -354,6 +354,12 @@
             font-family: monospace;
         }
 
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -375,261 +381,210 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="header-top">
-                <h1>🔐 Wallet Transaction Manager</h1>
-                <div class="user-info">
-                    <span class="user-name" id="userName">Welcome!</span>
-                    <button class="logout-btn" onclick="handleLogout()">Logout</button>
-                </div>
-            </div>
-            <div class="wallet-address">
-                <strong>Wallet Address:</strong><br>
-                TDM4gaGrYRhh39ugao8mt8eRjkxoTfTAZ6
-            </div>
-            
-            <div class="balance-section">
-                <div class="balance-label">Total Balance</div>
-                <div class="balance-amount" id="balance">9,980 USDT</div>
-                <div class="action-buttons">
-                    <button class="btn btn-send" onclick="openSendModal()">📤 Send</button>
-                    <button class="btn btn-receive" onclick="openReceiveModal()">📥 Receive</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="stats" id="stats">
-            <div class="stat-card">
-                <div class="stat-label">Total Transactions</div>
-                <div class="stat-value" id="totalTx">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Total Sent</div>
-                <div class="stat-value" id="totalSent">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Total Received</div>
-                <div class="stat-value" id="totalReceived">-</div>
-            </div>
-        </div>
-
-        <div class="transactions">
-            <h2>📋 Recent Transactions</h2>
-            <div id="transactionList"></div>
-        </div>
+    <div id="loadingState" class="loading">
+        <h2>Loading Wallet...</h2>
     </div>
 
-    <!-- Send Modal -->
-    <div class="modal" id="sendModal">
-        <div class="modal-content">
-            <div class="modal-header">Send USDT</div>
-            <div id="sendStep1">
-                <div class="form-group">
-                    <label class="form-label">Recipient Address</label>
-                    <input type="text" class="form-input" id="recipientAddress" placeholder="Enter wallet address">
+    <div id="walletContent" style="display: none;">
+        <div class="container">
+            <div class="header">
+                <div class="header-top">
+                    <h1>🔐 Wallet Transaction Manager</h1>
+                    <div class="user-info">
+                        <span class="user-name" id="userName">Welcome!</span>
+                        <button class="logout-btn" onclick="handleLogout()">Logout</button>
+                    </div>
                 </div>
+                <div class="wallet-address">
+                    <strong>Wallet Address:</strong><br>
+                    TDM4gaGrYRhh39ugao8mt8eRjkxoTfTAZ6
+                </div>
+                
+                <div class="balance-section">
+                    <div class="balance-label">Total Balance</div>
+                    <div class="balance-amount" id="balance">0 USDT</div>
+                    <div class="action-buttons">
+                        <button class="btn btn-send" onclick="openSendModal()">📤 Send</button>
+                        <button class="btn btn-receive" onclick="openReceiveModal()">📥 Receive</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats" id="stats">
+                <div class="stat-card">
+                    <div class="stat-label">Total Transactions</div>
+                    <div class="stat-value" id="totalTx">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Sent</div>
+                    <div class="stat-value" id="totalSent">0 USDT</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Received</div>
+                    <div class="stat-value" id="totalReceived">0 USDT</div>
+                </div>
+            </div>
+
+            <div class="transactions">
+                <h2>📋 Recent Transactions</h2>
+                <div id="transactionList"></div>
+            </div>
+        </div>
+
+        <!-- Send Modal -->
+        <div class="modal" id="sendModal">
+            <div class="modal-content">
+                <div class="modal-header">Send USDT</div>
+                <div id="sendStep1">
+                    <div class="form-group">
+                        <label class="form-label">Recipient Address</label>
+                        <input type="text" class="form-input" id="recipientAddress" placeholder="Enter wallet address">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Amount (USDT)</label>
+                        <input type="number" class="form-input" id="sendAmount" placeholder="Enter amount">
+                    </div>
+                    <div class="modal-buttons">
+                        <button class="btn-modal btn-cancel" onclick="closeModal()">Cancel</button>
+                        <button class="btn-modal btn-confirm" onclick="showPasswordStep()">Next</button>
+                    </div>
+                </div>
+                <div id="sendStep2" style="display: none;">
+                    <div id="errorMsg"></div>
+                    <div class="form-group">
+                        <label class="form-label">Enter Password</label>
+                        <input type="password" class="form-input" id="password" placeholder="Enter your password">
+                    </div>
+                    <div class="modal-buttons">
+                        <button class="btn-modal btn-cancel" onclick="backToStep1()">Back</button>
+                        <button class="btn-modal btn-confirm" onclick="confirmSend()">Confirm</button>
+                    </div>
+                </div>
+                <div id="sendProcessing" style="display: none;">
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <div style="width: 60px; height: 60px; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+                        <div style="font-size: 18px; font-weight: bold; color: #333; margin-bottom: 10px;">Processing Transaction...</div>
+                        <div style="font-size: 14px; color: #666;">Please wait <span id="countdown">15</span> seconds</div>
+                    </div>
+                </div>
+                <div id="sendSuccess" style="display: none;">
+                    <div class="success-message">
+                        ✓ Transaction Successful!
+                    </div>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                        <div style="margin-bottom: 15px;">
+                            <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Amount</div>
+                            <div style="color: #333; font-weight: bold; font-size: 20px;" id="successAmount"></div>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <div style="color: #666; font-size: 12px; margin-bottom: 5px;">To</div>
+                            <div style="color: #333; font-size: 13px; word-break: break-all; font-family: monospace;" id="successRecipient"></div>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Transaction ID</div>
+                            <div style="color: #333; font-size: 13px; word-break: break-all; font-family: monospace;" id="successTxId"></div>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Date & Time</div>
+                            <div style="color: #333; font-size: 14px;" id="successDateTime"></div>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Block Number</div>
+                            <div style="color: #333; font-size: 14px;" id="successBlock"></div>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Network</div>
+                            <div style="color: #333; font-size: 14px;">TRON (TRC20)</div>
+                        </div>
+                        <div>
+                            <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Transaction Fee</div>
+                            <div style="color: #333; font-size: 14px;">0.000001 TRX</div>
+                        </div>
+                    </div>
+                    <div class="modal-buttons" style="margin-top: 20px;">
+                        <button class="btn-modal btn-confirm" onclick="closeModal()">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receive Modal -->
+        <div class="modal" id="receiveModal">
+            <div class="modal-content">
+                <div class="modal-header">Receive USDT</div>
                 <div class="form-group">
-                    <label class="form-label">Amount (USDT)</label>
-                    <input type="number" class="form-input" id="sendAmount" placeholder="Enter amount">
+                    <label class="form-label">Your Wallet Address</label>
+                    <div class="wallet-address">
+                        TDM4gaGrYRhh39ugao8mt8eRjkxoTfTAZ6
+                    </div>
+                    <p style="color: #666; margin-top: 15px; font-size: 14px;">
+                        Share this address to receive USDT on the TRON (TRC20) network.
+                    </p>
                 </div>
                 <div class="modal-buttons">
-                    <button class="btn-modal btn-cancel" onclick="closeModal()">Cancel</button>
-                    <button class="btn-modal btn-confirm" onclick="showPasswordStep()">Next</button>
-                </div>
-            </div>
-            <div id="sendStep2" style="display: none;">
-                <div id="errorMsg"></div>
-                <div class="form-group">
-                    <label class="form-label">Enter Password</label>
-                    <input type="password" class="form-input" id="password" placeholder="Enter your password">
-                </div>
-                <div class="modal-buttons">
-                    <button class="btn-modal btn-cancel" onclick="backToStep1()">Back</button>
-                    <button class="btn-modal btn-confirm" onclick="confirmSend()">Confirm</button>
-                </div>
-            </div>
-            <div id="sendProcessing" style="display: none;">
-                <div style="text-align: center; padding: 40px 20px;">
-                    <div style="width: 60px; height: 60px; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
-                    <div style="font-size: 18px; font-weight: bold; color: #333; margin-bottom: 10px;">Processing Transaction...</div>
-                    <div style="font-size: 14px; color: #666;">Please wait <span id="countdown">15</span> seconds</div>
-                </div>
-            </div>
-            <div id="sendSuccess" style="display: none;">
-                <div class="success-message">
-                    ✓ Transaction Successful!
-                </div>
-                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px;">
-                    <div style="margin-bottom: 15px;">
-                        <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Amount</div>
-                        <div style="color: #333; font-weight: bold; font-size: 20px;" id="successAmount"></div>
-                    </div>
-                    <div style="margin-bottom: 15px;">
-                        <div style="color: #666; font-size: 12px; margin-bottom: 5px;">To</div>
-                        <div style="color: #333; font-size: 13px; word-break: break-all; font-family: monospace;" id="successRecipient"></div>
-                    </div>
-                    <div style="margin-bottom: 15px;">
-                        <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Transaction ID</div>
-                        <div style="color: #333; font-size: 13px; word-break: break-all; font-family: monospace;" id="successTxId"></div>
-                    </div>
-                    <div style="margin-bottom: 15px;">
-                        <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Date & Time</div>
-                        <div style="color: #333; font-size: 14px;" id="successDateTime"></div>
-                    </div>
-                    <div style="margin-bottom: 15px;">
-                        <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Block Number</div>
-                        <div style="color: #333; font-size: 14px;" id="successBlock"></div>
-                    </div>
-                    <div style="margin-bottom: 15px;">
-                        <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Network</div>
-                        <div style="color: #333; font-size: 14px;">TRON (TRC20)</div>
-                    </div>
-                    <div>
-                        <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Transaction Fee</div>
-                        <div style="color: #333; font-size: 14px;">0.000001 TRX</div>
-                    </div>
-                </div>
-                <div class="modal-buttons" style="margin-top: 20px;">
                     <button class="btn-modal btn-confirm" onclick="closeModal()">Close</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Receive Modal -->
-    <div class="modal" id="receiveModal">
-        <div class="modal-content">
-            <div class="modal-header">Receive USDT</div>
-            <div class="form-group">
-                <label class="form-label">Your Wallet Address</label>
-                <div class="wallet-address">
-                    TDM4gaGrYRhh39ugao8mt8eRjkxoTfTAZ6
-                </div>
-                <p style="color: #666; margin-top: 15px; font-size: 14px;">
-                    Share this address to receive USDT on the TRON (TRC20) network.
-                </p>
-            </div>
-            <div class="modal-buttons">
-                <button class="btn-modal btn-confirm" onclick="closeModal()">Close</button>
-            </div>
-        </div>
-    </div>
-
     <script>
         const walletAddress = 'TDM4gaGrYRhh39ugao8mt8eRjkxoTfTAZ6';
-        const correctPassword = '1224';
-        let currentBalance = 9980;
-        
-        let transactions = [
-            {
-                hash: '0x9f3a...b27c',
-                type: 'received',
-                amount: 3315,
-                from: 'TXhtjXq8zNxMyrW8hQdR9WcAj3X1P2L3q2',
-                to: walletAddress,
-                timestamp: '15 Dec 2025 – 09:24 AM',
-                status: 'Confirmed',
-                block: '#62104532',
-                fee: '0.000001 TRX',
-                network: 'TRON (TRC20)'
-            },
-            {
-                hash: '0x7e2b...c15f',
-                type: 'received',
-                amount: 1250,
-                from: 'TPQRstuv1234567890abcdefghijklmnop',
-                to: walletAddress,
-                timestamp: '16 Dec 2025 – 02:15 PM',
-                status: 'Confirmed',
-                block: '#62108921',
-                fee: '0.000001 TRX',
-                network: 'TRON (TRC20)'
-            },
-            {
-                hash: '0x5d8c...a94e',
-                type: 'sent',
-                amount: 500,
-                from: walletAddress,
-                to: 'TYZabcd9876543210fedcbazyxwvutsrq',
-                timestamp: '16 Dec 2025 – 10:30 AM',
-                status: 'Confirmed',
-                block: '#62106754',
-                fee: '0.000001 TRX',
-                network: 'TRON (TRC20)'
-            },
-            {
-                hash: '0x3a1f...d72b',
-                type: 'received',
-                amount: 2100,
-                from: 'TLMNopqr5555666677778888999900001111',
-                to: walletAddress,
-                timestamp: '14 Dec 2025 – 04:45 PM',
-                status: 'Confirmed',
-                block: '#62095432',
-                fee: '0.000001 TRX',
-                network: 'TRON (TRC20)'
-            },
-            {
-                hash: '0x8b6e...f43a',
-                type: 'sent',
-                amount: 750,
-                from: walletAddress,
-                to: 'TGHIjklm2222333344445555666677778888',
-                timestamp: '13 Dec 2025 – 11:20 AM',
-                status: 'Confirmed',
-                block: '#62089876',
-                fee: '0.000001 TRX',
-                network: 'TRON (TRC20)'
-            },
-            {
-                hash: '0x2c9d...e81f',
-                type: 'received',
-                amount: 3315,
-                from: 'TXhtjXq8zNxMyrW8hQdR9WcAj3X1P2L3q2',
-                to: walletAddress,
-                timestamp: '15 Dec 2025 – 09:24 AM',
-                status: 'Confirmed',
-                block: '#62104532',
-                fee: '0.000001 TRX',
-                network: 'TRON (TRC20)'
-            }
-        ];
+        let currentUser = null;
+        let userData = null;
 
-        // NEW: Check authentication and load user info
-        function checkAuth() {
-            const currentUser = sessionStorage.getItem('currentUser');
-            if (!currentUser) {
-                // Not logged in, redirect to login page
-                window.location.href = 'index.html';
-                return;
-            }
-
-            // Load user data
-            const usersData = sessionStorage.getItem('walletUsers');
-            if (usersData) {
-                const users = JSON.parse(usersData);
-                if (users[currentUser]) {
-                    document.getElementById('userName').textContent = `Welcome, ${users[currentUser].name}!`;
-                }
+        // Storage Functions
+        async function getCurrentUser() {
+            try {
+                const result = await window.storage.get('current_user');
+                return result ? result.value : null;
+            } catch (error) {
+                return null;
             }
         }
 
-        // NEW: Handle logout
-        function handleLogout() {
+        async function loadUsers() {
+            try {
+                const result = await window.storage.get('wallet_users');
+                return result ? JSON.parse(result.value) : {};
+            } catch (error) {
+                return {};
+            }
+        }
+
+        async function saveUserData(email, data) {
+            try {
+                const users = await loadUsers();
+                users[email] = data;
+                await window.storage.set('wallet_users', JSON.stringify(users));
+            } catch (error) {
+                console.error('Error saving user data:', error);
+            }
+        }
+
+        async function handleLogout() {
             if (confirm('Are you sure you want to logout?')) {
-                sessionStorage.removeItem('currentUser');
-                window.location.href = 'index.html';
+                try {
+                    await window.storage.delete('current_user');
+                    location.reload();
+                } catch (error) {
+                    console.error('Error logging out:', error);
+                }
             }
         }
 
         function displayTransactions() {
             const transactionList = document.getElementById('transactionList');
             
+            if (!userData || !userData.transactions || userData.transactions.length === 0) {
+                transactionList.innerHTML = '<p style="text-align: center; color: #666;">No transactions yet</p>';
+                return;
+            }
+            
             let totalSent = 0;
             let totalReceived = 0;
 
-            const html = transactions.map(tx => {
+            const html = userData.transactions.map(tx => {
                 if (tx.type === 'sent') totalSent += tx.amount;
                 if (tx.type === 'received') totalReceived += tx.amount;
 
@@ -679,13 +634,13 @@
 
             transactionList.innerHTML = html;
 
-            document.getElementById('totalTx').textContent = transactions.length;
+            document.getElementById('totalTx').textContent = userData.transactions.length;
             document.getElementById('totalSent').textContent = totalSent.toLocaleString() + ' USDT';
             document.getElementById('totalReceived').textContent = totalReceived.toLocaleString() + ' USDT';
         }
 
         function updateBalance() {
-            document.getElementById('balance').textContent = currentBalance.toLocaleString() + ' USDT';
+            document.getElementById('balance').textContent = userData.balance.toLocaleString() + ' USDT';
         }
 
         function openSendModal() {
@@ -723,7 +678,7 @@
                 return;
             }
 
-            if (amount > currentBalance) {
+            if (amount > userData.balance) {
                 alert('Insufficient balance');
                 return;
             }
@@ -738,12 +693,12 @@
             document.getElementById('errorMsg').innerHTML = '';
         }
 
-        function confirmSend() {
+        async function confirmSend() {
             const password = document.getElementById('password').value;
             const recipient = document.getElementById('recipientAddress').value;
             const amount = parseFloat(document.getElementById('sendAmount').value);
 
-            if (password !== correctPassword) {
+            if (password !== userData.password) {
                 document.getElementById('errorMsg').innerHTML = '<div class="error-message">Incorrect password. Please try again.</div>';
                 return;
             }
@@ -763,12 +718,12 @@
                 }
             }, 1000);
 
-            setTimeout(() => {
-                currentBalance -= amount;
+            setTimeout(async () => {
+                userData.balance -= amount;
                 
                 const now = new Date();
                 const timestamp = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + 
-                                ' – ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                                ' — ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
                 
                 const fullTxId = '0x' + Array.from({length: 64}, () => 
                     Math.floor(Math.random() * 16).toString(16)).join('');
@@ -788,7 +743,9 @@
                     network: 'TRON (TRC20)'
                 };
 
-                transactions.unshift(newTx);
+                userData.transactions.unshift(newTx);
+                
+                await saveUserData(currentUser, userData);
                 
                 updateBalance();
                 displayTransactions();
@@ -804,9 +761,34 @@
             }, 15000);
         }
 
-        // NEW: Initialize - check auth first
-        checkAuth();
-        displayTransactions();
+        async function initialize() {
+            currentUser = await getCurrentUser();
+            
+            if (!currentUser) {
+                document.getElementById('loadingState').innerHTML = '<h2>Redirecting to login...</h2>';
+                setTimeout(() => location.reload(), 1000);
+                return;
+            }
+
+            const users = await loadUsers();
+            userData = users[currentUser];
+            
+            if (!userData) {
+                document.getElementById('loadingState').innerHTML = '<h2>User data not found. Redirecting...</h2>';
+                await window.storage.delete('current_user');
+                setTimeout(() => location.reload(), 1000);
+                return;
+            }
+
+            document.getElementById('userName').textContent = `Welcome, ${userData.name}!`;
+            updateBalance();
+            displayTransactions();
+            
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('walletContent').style.display = 'block';
+        }
+
+        initialize();
     </script>
 </body>
 </html>
