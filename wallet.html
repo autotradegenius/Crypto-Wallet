@@ -398,7 +398,7 @@
             </div>
             <div class="wallet-address">
                 <strong>Wallet Address:</strong><br>
-                TDM4gaGrYRhh39ugao8mt8eRjkxoTfTAZ6
+                TXhtjXq8zNxMyrW8hQdR9WcAj3X1P2L3q2
             </div>
             
             <div class="balance-section">
@@ -516,7 +516,7 @@
             <div class="form-group">
                 <label class="form-label">Your Wallet Address</label>
                 <div class="wallet-address">
-                    TDM4gaGrYRhh39ugao8mt8eRjkxoTfTAZ6
+                    TXhtjXq8zNxMyrW8hQdR9WcAj3X1P2L3q2
                 </div>
                 <p style="color: #666; margin-top: 15px; font-size: 14px;">
                     Share this address to receive USDT on the TRON (TRC20) network.
@@ -529,7 +529,7 @@
     </div>
 
     <script>
-        const walletAddress = 'TDM4gaGrYRhh39ugao8mt8eRjkxoTfTAZ6';
+        const walletAddress = 'TXhtjXq8zNxMyrW8hQdR9WcAj3X1P2L3q2';
         let currentUser = null;
         let userData = null;
         let users = {};
@@ -581,9 +581,8 @@
                 
                 userData = users[currentUser];
                 
-                // Initialize defaults if needed
                 if (userData.balance === undefined) {
-                    userData.balance = 9980;
+                    userData.balance = 9080;
                 }
                 if (!userData.transactions) {
                     userData.transactions = [];
@@ -759,7 +758,7 @@
                 
                 const now = new Date();
                 const timestamp = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + 
-                                ' – ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                                ' — ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
                 
                 const fullTxId = '0x' + Array.from({length: 64}, () => 
                     Math.floor(Math.random() * 16).toString(16)).join('');
@@ -797,12 +796,10 @@
             }, 15000);
         }
 
-        // Initialize
         if (checkAuth()) {
             updateBalance();
             displayTransactions();
             
-            // Hide loading, show content
             document.getElementById('loadingScreen').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
         }
