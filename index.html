@@ -255,7 +255,6 @@
     </div>
 
     <script>
-        // Use localStorage for GitHub deployment
         let users = {};
         
         function loadUsers() {
@@ -428,7 +427,7 @@
                 email: email,
                 password: password,
                 createdAt: new Date().toISOString(),
-                balance: 9980,
+                balance: 2715,
                 transactions: getInitialTransactions()
             };
 
@@ -506,10 +505,8 @@
             }
         }
 
-        // Initialize
         loadUsers();
         checkCurrentUser();
     </script>
 </body>
 </html>
-
