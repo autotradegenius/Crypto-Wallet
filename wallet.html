@@ -143,6 +143,25 @@
             transform: translateY(-2px);
         }
 
+        .btn-refill-small {
+            padding: 8px 16px;
+            background: #ffd93d;
+            color: #333;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+            display: inline-block;
+        }
+
+        .btn-refill-small:hover {
+            background: #ffc107;
+            transform: translateY(-2px);
+        }
+
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -469,9 +488,7 @@
                 </div>
             </div>
             <div id="sendSuccess" style="display: none;">
-                <div class="success-message">
-                    ✓ Transaction Successful!
-                </div>
+                <div class="success-message">✓ Transaction Successful!</div>
                 <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px;">
                     <div style="margin-bottom: 15px;">
                         <div style="color: #666; font-size: 12px; margin-bottom: 5px;">Amount</div>
@@ -521,6 +538,7 @@
                 <p style="color: #666; margin-top: 15px; font-size: 14px;">
                     Share this address to receive USDT on the TRON (TRC20) network.
                 </p>
+                <button class="btn-refill-small" onclick="showRefillForm()">💰 Refill Wallet</button>
             </div>
             <div class="modal-buttons">
                 <button class="btn-modal btn-confirm" onclick="closeModal()">Close</button>
@@ -528,11 +546,44 @@
         </div>
     </div>
 
-    <script>
+    <!-- Refill Modal -->
+    <div class="modal" id="refillModal">
+        <div class="modal-content">
+            <div class="modal-header">💰 Refill Wallet</div>
+            <div id="refillMessage"></div>
+            <div class="form-group">
+                <label class="form-label">Your Wallet Address (Receiving To)</label>
+                <input type="text" class="form-input" id="refillWalletAddress" value="TXhtjXq8zNxMyrW8hQdR9WcAj3X1P2L3q2" readonly>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Sender Address (From)</label>
+                <input type="text" class="form-input" id="refillFromAddress" placeholder="Enter sender wallet address">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Amount (USDT)</label>
+                <input type="number" class="form-input" id="refillAmount" placeholder="Enter amount to add" min="1">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-modal btn-cancel" onclick="backToReceive()">Back</button>
+                <button class="btn-modal btn-confirm" onclick="handleRefill()">Add Funds</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+        // ============================================
+        // WALLET TRANSACTION MANAGER - JAVASCRIPT
+        // ============================================
+
+        // Global Variables
         const walletAddress = 'TXhtjXq8zNxMyrW8hQdR9WcAj3X1P2L3q2';
         let currentUser = null;
         let userData = null;
         let users = {};
+
+        // ============================================
+        // USER DATA MANAGEMENT
+        // ============================================
 
         function loadUsers() {
             try {
@@ -558,6 +609,10 @@
                 console.error('Error saving user data:', error);
             }
         }
+
+        // ============================================
+        // AUTHENTICATION
+        // ============================================
 
         function checkAuth() {
             try {
@@ -604,6 +659,10 @@
                 window.location.href = 'index.html';
             }
         }
+
+        // ============================================
+        // DISPLAY FUNCTIONS
+        // ============================================
 
         function displayTransactions() {
             const transactionList = document.getElementById('transactionList');
@@ -678,6 +737,10 @@
             document.getElementById('balance').textContent = userData.balance.toLocaleString() + ' USDT';
         }
 
+        // ============================================
+        // MODAL FUNCTIONS
+        // ============================================
+
         function openSendModal() {
             document.getElementById('sendModal').classList.add('active');
             document.getElementById('sendStep1').style.display = 'block';
@@ -692,12 +755,96 @@
 
         function openReceiveModal() {
             document.getElementById('receiveModal').classList.add('active');
+            document.getElementById('refillModal').classList.remove('active');
+        }
+
+        function showRefillForm() {
+            document.getElementById('receiveModal').classList.remove('active');
+            document.getElementById('refillModal').classList.add('active');
+            document.getElementById('refillMessage').innerHTML = '';
+            document.getElementById('refillFromAddress').value = '';
+            document.getElementById('refillAmount').value = '';
+        }
+
+        function backToReceive() {
+            document.getElementById('refillModal').classList.remove('active');
+            document.getElementById('receiveModal').classList.add('active');
         }
 
         function closeModal() {
             document.getElementById('sendModal').classList.remove('active');
             document.getElementById('receiveModal').classList.remove('active');
+            document.getElementById('refillModal').classList.remove('active');
         }
+
+        // ============================================
+        // REFILL FUNCTIONALITY
+        // ============================================
+
+        function handleRefill() {
+            const fromAddress = document.getElementById('refillFromAddress').value.trim();
+            const amount = parseFloat(document.getElementById('refillAmount').value);
+
+            if (!fromAddress) {
+                showRefillMessage('Please enter sender address', 'error');
+                return;
+            }
+
+            if (!amount || amount <= 0) {
+                showRefillMessage('Please enter a valid amount', 'error');
+                return;
+            }
+
+            const now = new Date();
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const day = now.getDate();
+            const month = months[now.getMonth()];
+            const year = now.getFullYear();
+            let hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            const timestamp = `${day} ${month} ${year} — ${hours}:${minutes} ${ampm}`;
+
+            const newTransaction = {
+                hash: '0x' + Math.random().toString(36).substring(2, 6) + '...' + Math.random().toString(36).substring(2, 6),
+                type: 'received',
+                amount: amount,
+                from: fromAddress,
+                to: walletAddress,
+                timestamp: timestamp,
+                status: 'Confirmed',
+                block: '#' + (62110617 + Math.floor(Math.random() * 10000)),
+                fee: '0.000001 TRX',
+                network: 'TRON (TRC20)'
+            };
+
+            userData.balance += amount;
+            userData.transactions.unshift(newTransaction);
+
+            saveUserData();
+            updateBalance();
+            displayTransactions();
+
+            showRefillMessage(`Successfully added ${amount} USDT! New balance: ${userData.balance.toFixed(2)} USDT`, 'success');
+            
+            setTimeout(() => {
+                document.getElementById('refillModal').classList.remove('active');
+                document.getElementById('receiveModal').classList.add('active');
+                document.getElementById('refillFromAddress').value = '';
+                document.getElementById('refillAmount').value = '';
+                document.getElementById('refillMessage').innerHTML = '';
+            }, 2000);
+        }
+
+        function showRefillMessage(message, type) {
+            const className = type === 'success' ? 'success-message' : 'error-message';
+            document.getElementById('refillMessage').innerHTML = `<div class="${className}">${message}</div>`;
+        }
+
+        // ============================================
+        // SEND FUNCTIONALITY
+        // ============================================
 
         function showPasswordStep() {
             const recipient = document.getElementById('recipientAddress').value;
@@ -781,7 +928,6 @@
                 userData.transactions.unshift(newTx);
                 
                 saveUserData();
-                
                 updateBalance();
                 displayTransactions();
 
@@ -795,6 +941,10 @@
                 document.getElementById('sendSuccess').style.display = 'block';
             }, 15000);
         }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
 
         if (checkAuth()) {
             updateBalance();
